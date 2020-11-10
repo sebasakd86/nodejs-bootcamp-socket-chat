@@ -27,8 +27,8 @@ io.on('connection', (client) => {
 
                 let p = usuarios.agregarPersona(client.id, usuario.nombre, usuario.sala)
 
-                client.broadcast.to(usuario.sala).emit('listaPersonas', usuarios.getPersonasPorSala(usuario.sala))
-
+                client.broadcast.to(usuario.sala).emit('listaPersona', usuarios.getPersonasPorSala(usuario.sala))
+                client.broadcast.to(usuario.sala).emit('crearMensaje', crearMensaje('Admin', `${usuario.nombre} ingreso al chat`))
                 return callback(p)
             }
         }
@@ -36,12 +36,13 @@ io.on('connection', (client) => {
     client.on('disconnect', () => {
         let pb = usuarios.borrarPersona(client.id)
         client.broadcast.to(pb.sala).emit('crearMensaje', crearMensaje('Admin', `${pb.nombre} se fue del chat`))
-        client.broadcast.to(pb.sala).emit('listaPersonas', usuarios.getPersonasPorSala(pb.sala))
+        client.broadcast.to(pb.sala).emit('listaPersona', usuarios.getPersonasPorSala(pb.sala))
     })
-    client.on('crearMensaje', (data) => {
+    client.on('crearMensaje', (data, callback) => {
         let p = usuarios.getPersona(client.id)
         let msg = crearMensaje(p.nombre, data.msg)
-        client.broadcast.to(p.sala).emit('crearMensaje', msg)
+        client.broadcast.to(p.sala).emit('crearMensaje', msg)        
+        callback(msg)
     })
     client.on('mensajePrivado', data => {
         let p = usuarios.getPersona(client.id)
